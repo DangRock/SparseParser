@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:deploy": "vite build --outDir T:\\Websites\\CherryFamilyLights-Sparser --emptyOutDir",
     "preview": "vite preview",
     "verify": "node test/verify.mjs"
   },
