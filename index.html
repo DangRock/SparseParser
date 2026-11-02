@@ -4,35 +4,67 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FSEQ Sparser</title>
+    <link rel="icon" href="/cherryfavicon.ico" sizes="any" />
+    <style>
+      .dark-only {
+        display: none;
+      }
+      [data-theme="dark"] .dark-only {
+        display: block;
+      }
+      [data-theme="dark"] .light-only {
+        display: none;
+      }
+    </style>
+    <script>
+      document.documentElement.dataset.theme =
+        localStorage.getItem("sparser-light-dark-mode") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
   </head>
   <body>
     <main>
-      <h1>FSEQ Sparser</h1>
+      <div class="top">
+        <h1>FSEQ Sparser</h1>
+        <button
+          id="themeToggle"
+          type="button"
+          aria-label="Toggle dark mode"
+          title="Toggle dark mode"
+        ></button>
+      </div>
       <div class="sub">
         <p>
-          This tool parses full FSEQ files into individual sparse FSEQ files for each controller. Use this tool
-          if you're having problems transferring sequences to your remotes using FPP Connect (weak Wi-Fi,
-          timeouts, etc.) and want to instead generate sparse FSEQ files for each controller to install in each 
-          controller. 
+          This tool parses full FSEQ files into individual sparse FSEQ files for
+          each controller. Use this tool if you're having problems transferring
+          sequences to your remotes using FPP Connect (weak Wi-Fi, timeouts,
+          etc.) and want to instead generate sparse FSEQ files for each
+          controller to install in each controller.
         </p>
         <p>
-          Select the folder that contains your FSEQ files, select your xlights_networks.xml and choose the
-          individual sequences, if necessary. Sparser will generate the sparse FSEQ files in a "sparse" folder
-          inside the FSEQ folder in separate folders for each controller (by name and IP). You then copy the
-          contents of each folder to an SD card and install in the remote device.
+          Select the folder that contains your FSEQ files, select your
+          xlights_networks.xml and choose the individual sequences, if
+          necessary. Sparser will generate the sparse FSEQ files in a "sparse"
+          folder inside the FSEQ folder in separate folders for each controller
+          (by name and IP). You then copy the contents of each folder to an SD
+          card and install in the remote device.
         </p>
         <p>
-          All processing is done on your local machine. No files are copied to the internet. Chrome/Edge is
-          required.
+          All processing is done on your local machine. No files are copied to
+          the internet. Chrome/Edge is required.
         </p>
       </div>
 
       <p id="unsupported" class="error" hidden>
-        This browser can't write to local folders. Please use Chrome or Edge on a desktop.
+        This browser can't write to local folders. Please use Chrome or Edge on
+        a desktop.
       </p>
 
       <details id="step1" class="step" open>
-        <summary><span class="title">1. Choose your FSEQ folder</span><span id="sum1" class="sum"></span></summary>
+        <summary>
+          <span class="title">1. Choose your FSEQ folder</span
+          ><span id="sum1" class="sum"></span>
+        </summary>
         <div class="body">
           <button id="pick">Select folder…</button>
           <span id="folderName"></span>
@@ -44,17 +76,23 @@
       </details>
 
       <details id="step2" class="step" hidden>
-        <summary><span class="title">2. Network configuration</span><span id="sum2" class="sum"></span></summary>
+        <summary>
+          <span class="title">2. Network configuration</span
+          ><span id="sum2" class="sum"></span>
+        </summary>
         <div class="body">
           <p id="networksStatus"></p>
           <button id="pickNetworks" hidden>Choose xlights_networks.xml…</button>
           <div id="controllers"></div>
-          <button id="next2" disabled style="margin-top: 10px;">Continue</button>
+          <button id="next2" disabled style="margin-top: 10px">Continue</button>
         </div>
       </details>
 
       <details id="step3" class="step" hidden>
-        <summary><span class="title">3. Sequences</span><span id="sum3" class="sum"></span></summary>
+        <summary>
+          <span class="title">3. Sequences</span
+          ><span id="sum3" class="sum"></span>
+        </summary>
         <div class="body">
           <div id="sequences"></div>
           <button id="run" disabled>Create sparse files</button>
@@ -67,6 +105,83 @@
         <progress id="progress" max="1" value="0"></progress>
         <pre id="log"></pre>
       </section>
+      <footer>
+        <p>
+          This tool created, hosted, and maintained by Rocky Cherry with GitHub
+          Copilot.
+        </p>
+        <div class="logos">
+          <a
+            href="https://github.com/DangRock/SparseParser"
+            target="_blank"
+            rel="noopener"
+            title="Source on GitHub"
+          >
+            <img
+              height="48"
+              style="height: 48px; width: auto"
+              class="light-only"
+              src="/images/GitHub_Lockup_Black.png"
+              alt="GitHub"
+            />
+            <img
+              height="48"
+              style="height: 48px; width: auto"
+              class="dark-only"
+              src="/images/GitHub_Lockup_White.png"
+              alt="GitHub"
+            />
+          </a>
+          <a
+            href="https://www.youtube.com/@rockyshowsyouhow4825"
+            target="_blank"
+            rel="noopener"
+            title="Rocky Shows You How on YouTube"
+          >
+            <img
+              height="48"
+              style="height: 48px; width: auto"
+              class="light-only"
+              src="/images/yt_logo_fullcolor_almostblack_digital.png"
+              alt="YouTube – Rocky Shows You How"
+            />
+            <img
+              height="48"
+              style="height: 48px; width: auto"
+              class="dark-only"
+              src="/images/yt_logo_fullcolor_white_digital.png"
+              alt="YouTube – Rocky Shows You How"
+            />
+          </a>
+          <a
+            href="https://www.facebook.com/profile.php?id=61594903623525"
+            target="_blank"
+            rel="noopener"
+            title="Facebook page"
+          >
+            <img
+              height="48"
+              style="height: 48px; width: auto"
+              src="/images/Facebook_Logo_Primary.png"
+              alt="Facebook"
+            />
+          </a>
+        </div>
+        <a
+          href="https://cherryfamilylights.com"
+          target="_blank"
+          rel="noopener"
+          title="Cherry Family Lights"
+        >
+          <img
+            class="family-logo"
+            src="/images/CherryFamilyLightShowLogo_Circular_Est2022_V1.png"
+            alt="Cherry Family Light Show"
+            width="300"
+            height="300"
+          />
+        </a>
+      </footer>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>

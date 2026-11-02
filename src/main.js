@@ -263,6 +263,15 @@ async function run() {
   }
 }
 
+const root = document.documentElement
+const syncThemeIcon = () => ($('themeToggle').textContent = root.dataset.theme === 'dark' ? '☀️' : '🌙')
+$('themeToggle').onclick = () => {
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'
+  localStorage.setItem('sparser-light-dark-mode', root.dataset.theme)
+  syncThemeIcon()
+}
+syncThemeIcon()
+
 $('pick').onclick = pickFolder
 $('pickNetworks').onclick = pickNetworks
 $('next2').onclick = continueFromNetworks
