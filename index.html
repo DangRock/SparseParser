@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FSEQ Sparser</title>
+  </head>
+  <body>
+    <main>
+      <h1>FSEQ Sparser</h1>
+      <div class="sub">
+        <p>
+          This tool parses full FSEQ files into individual sparse FSEQ files for each controller. Use this tool
+          if you're having problems transferring sequences to your remotes using FPP Connect (weak Wi-Fi,
+          timeouts, etc.) and want to instead generate sparse FSEQ files for each controller to install in each 
+          controller. 
+        </p>
+        <p>
+          Select the folder that contains your FSEQ files, select your xlights_networks.xml and choose the
+          individual sequences, if necessary. Sparser will generate the sparse FSEQ files in a "sparse" folder
+          inside the FSEQ folder in separate folders for each controller (by name and IP). You then copy the
+          contents of each folder to an SD card and install in the remote device.
+        </p>
+        <p>
+          All processing is done on your local machine. No files are copied to the internet. Chrome/Edge is
+          required.
+        </p>
+      </div>
+
+      <p id="unsupported" class="error" hidden>
+        This browser can't write to local folders. Please use Chrome or Edge on a desktop.
+      </p>
+
+      <details id="step1" class="step" open>
+        <summary><span class="title">1. Choose your FSEQ folder</span><span id="sum1" class="sum"></span></summary>
+        <div class="body">
+          <button id="pick">Select folder…</button>
+          <span id="folderName"></span>
+          <p class="hint">
+            Output is written to a <code>sparse</code> subfolder, e.g.
+            <code>sparse\10_0_0_203_DigQuad3\Sequence.fseq</code>.
+          </p>
+        </div>
+      </details>
+
+      <details id="step2" class="step" hidden>
+        <summary><span class="title">2. Network configuration</span><span id="sum2" class="sum"></span></summary>
+        <div class="body">
+          <p id="networksStatus"></p>
+          <button id="pickNetworks" hidden>Choose xlights_networks.xml…</button>
+          <div id="controllers"></div>
+          <button id="next2" disabled style="margin-top: 10px;">Continue</button>
+        </div>
+      </details>
+
+      <details id="step3" class="step" hidden>
+        <summary><span class="title">3. Sequences</span><span id="sum3" class="sum"></span></summary>
+        <div class="body">
+          <div id="sequences"></div>
+          <button id="run" disabled>Create sparse files</button>
+          <button id="cancel" hidden>Cancel</button>
+        </div>
+      </details>
+
+      <section id="progressSection" hidden>
+        <div id="complete" class="complete" hidden></div>
+        <progress id="progress" max="1" value="0"></progress>
+        <pre id="log"></pre>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
