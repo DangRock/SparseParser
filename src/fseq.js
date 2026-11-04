@@ -86,7 +86,7 @@ export function buildHeader(info, wanted, outSize) {
   })
   const varLen = keep.reduce((a, v) => a + v.length, 0)
   const hlen = 32 + 6 * wanted.length
-  const offset = Math.max(208, Math.ceil((hlen + varLen) / 8) * 8)
+  const offset = Math.ceil((hlen + varLen) / 4) * 4 // FPP Connect pads to 4 bytes
   const out = new Uint8Array(offset)
   const dv = new DataView(out.buffer)
   out.set([0x50, 0x53, 0x45, 0x51]) // PSEQ

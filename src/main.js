@@ -23,6 +23,10 @@ const log = (msg) => {
 }
 
 const fmtMB = (n) => (n / 1048576).toFixed(0) + ' MB'
+const fmtDate = (ms) =>
+  new Date(ms).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+let seqFilter = ''
+let seqSort = { key: 'modified', dir: -1 }
 
 async function pickFolder() {
   try {
@@ -36,10 +40,13 @@ async function pickFolder() {
   for await (const [name, handle] of dirHandle.entries()) {
     if (handle.kind !== 'file') continue
     const lower = name.toLowerCase()
-    if (lower.endsWith('.fseq') && !IP_PREFIX.test(name)) sequences.push({ name, handle })
-    else if (lower === 'xlights_networks.xml') networksHandle = handle
+    if (lower.endsWith('.fseq') && !IP_PREFIX.test(name)) {
+      const f = await handle.getFile()
+      sequences.push({ name, handle, modified: f.lastModified, size: f.size, selected: true })
+    } else if (lower === 'xlights_networks.xml') networksHandle = handle
   }
-  sequences.sort((a, b) => a.name.localeCompare(b.name))
+  seqFilter = ''
+  seqSort = { key: 'modified', dir: -1 }
   $('sum1').textContent = `FSEQ Folder: ${dirHandle.name}`
   $('step1').open = false
   $('step2').hidden = false
@@ -151,27 +158,121 @@ function renderSequences() {
   box.innerHTML = ''
   if (!sequences.length) {
     box.innerHTML = '<p class="error">No full .fseq files found in this folder.</p>'
-  } else {
-    const setAll = (v) => () => {
-      sequences.forEach((s) => (s.selected = v))
-      renderSequences()
-    }
-    box.append(chips([['All', setAll(true)], ['None', setAll(false)]]))
+    updateRunState()
+    return
   }
-  for (const s of sequences) {
-    if (s.selected === undefined) s.selected = true
-    const row = document.createElement('label')
-    const cb = document.createElement('input')
-    cb.type = 'checkbox'
-    cb.checked = s.selected
-    cb.onchange = () => {
-      s.selected = cb.checked
-      updateRunState()
-    }
-    row.append(cb, ` ${s.name}`)
-    box.append(row)
+  const visible = () => {
+    const q = seqFilter.trim().toLowerCase()
+    const rows = sequences.filter((s) => s.name.toLowerCase().includes(q))
+    const dir = seqSort.dir
+    return rows.sort((a, b) => {
+      const r = seqSort.key === 'name' ? a.name.localeCompare(b.name) : a.modified - b.modified
+      return r * dir
+    })
   }
-  updateRunState()
+
+  const setVisible = (v) => () => {
+    visible().forEach((s) => (s.selected = v))
+    renderRows()
+  }
+  const search = document.createElement('input')
+  search.type = 'search'
+  search.className = 'search'
+  search.placeholder = 'Filter sequences by name…'
+  search.value = seqFilter
+  search.oninput = () => {
+    seqFilter = search.value
+    renderRows()
+  }
+  const toolbar = document.createElement('div')
+  toolbar.className = 'seq-toolbar'
+  toolbar.append(search)
+  const count = document.createElement('span')
+  count.className = 'meta'
+  toolbar.append(count)
+
+  const table = document.createElement('table')
+  table.className = 'grid'
+  const head = document.createElement('thead')
+  const hr = document.createElement('tr')
+  const allCb = document.createElement('input')
+  allCb.type = 'checkbox'
+  allCb.title = 'Select / clear all shown'
+  const th0 = document.createElement('th')
+  th0.className = 'chk'
+  th0.append(allCb)
+  hr.append(th0)
+  const sortHeaders = {}
+  for (const [key, label] of [['name', 'Sequence'], ['modified', 'Last modified']]) {
+    const th = document.createElement('th')
+    th.className = 'sortable'
+    th.onclick = () => {
+      seqSort = { key, dir: seqSort.key === key ? -seqSort.dir : key === 'modified' ? -1 : 1 }
+      renderRows()
+    }
+    sortHeaders[key] = th
+    th.dataset.label = label
+    hr.append(th)
+  }
+  const thSize = document.createElement('th')
+  thSize.textContent = 'Size'
+  hr.append(thSize)
+  head.append(hr)
+  const body = document.createElement('tbody')
+  table.append(head, body)
+  const wrap = document.createElement('div')
+  wrap.className = 'list'
+  wrap.append(table)
+  box.append(toolbar, wrap)
+
+  function renderRows() {
+    const rows = visible()
+    for (const [key, th] of Object.entries(sortHeaders)) {
+      const active = seqSort.key === key
+      th.textContent = th.dataset.label + (active ? (seqSort.dir === 1 ? ' ▲' : ' ▼') : '')
+      th.setAttribute('aria-sort', active ? (seqSort.dir === 1 ? 'ascending' : 'descending') : 'none')
+    }
+    body.innerHTML = ''
+    for (const s of rows) {
+      const tr = document.createElement('tr')
+      const cb = document.createElement('input')
+      cb.type = 'checkbox'
+      cb.checked = s.selected
+      cb.onchange = () => {
+        s.selected = cb.checked
+        syncHeader()
+        updateRunState()
+      }
+      const td0 = document.createElement('td')
+      td0.className = 'chk'
+      td0.append(cb)
+      const tdName = document.createElement('td')
+      tdName.textContent = s.name
+      const tdMod = document.createElement('td')
+      tdMod.textContent = fmtDate(s.modified)
+      const tdSize = document.createElement('td')
+      tdSize.textContent = fmtMB(s.size)
+      tr.append(td0, tdName, tdMod, tdSize)
+      tr.onclick = (e) => {
+        if (e.target === cb) return
+        cb.checked = !cb.checked
+        cb.onchange()
+      }
+      body.append(tr)
+    }
+    if (!rows.length) body.innerHTML = '<tr><td colspan="4" class="meta">No sequences match the filter.</td></tr>'
+    count.textContent = `${rows.length} of ${sequences.length} shown`
+    syncHeader()
+    updateRunState()
+  }
+  function syncHeader() {
+    const rows = visible()
+    const n = rows.filter((s) => s.selected).length
+    allCb.checked = rows.length > 0 && n === rows.length
+    allCb.indeterminate = n > 0 && n < rows.length
+  }
+  allCb.onchange = () => setVisible(allCb.checked)()
+  renderRows()
 }
 
 function updateRunState() {
@@ -210,7 +311,7 @@ async function run() {
   let filesCreated = 0
   let filesSkipped = 0
   const targets = chosen.map((c) => ({ key: folderName(c), ip: c.ip, ranges: [[c.start, c.length]] }))
-  const sparseDir = await dirHandle.getDirectoryHandle('sparse', { create: true })
+  const sparseDir = await dirHandle.getDirectoryHandle('Sparser', { create: true })
   const t0 = performance.now()
 
   try {
@@ -235,7 +336,7 @@ async function run() {
         },
       )
       if (res.cancelled) break
-      for (const key of res.written) log(`  created: sparse\\${key}\\${s.name}`)
+      for (const key of res.written) log(`  created: Sparser\\${key}\\${s.name}`)
       for (const key of res.skipped) log(`  skipped (no channels in this sequence): ${key}`)
       filesCreated += res.written.length
       filesSkipped += res.skipped.length
@@ -271,6 +372,9 @@ $('themeToggle').onclick = () => {
   syncThemeIcon()
 }
 syncThemeIcon()
+
+const buildDate = new Date(__BUILD_TIME__).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+$('version').textContent = `v${__APP_VERSION__} · built ${buildDate}`
 
 $('pick').onclick = pickFolder
 $('pickNetworks').onclick = pickNetworks
